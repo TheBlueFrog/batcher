@@ -21,8 +21,8 @@ public class Money {
         String cp = "-cp out\\production\\money com.mike.money.Main";
 
         List<String> ssaScenarios = new ArrayList<String>();
-        ssaScenarios.add("r62-f70");
-        ssaScenarios.add("r65-f70");
+        ssaScenarios.add("r62");
+        ssaScenarios.add("r65");
 
         List<String> roiScenarios = new ArrayList<String>();
         roiScenarios.add("1");
@@ -30,9 +30,9 @@ public class Money {
         roiScenarios.add("3");
         roiScenarios.add("4");
 
-        List<Boolean> SpecialIncomeScenarios = new ArrayList<Boolean>();
-        SpecialIncomeScenarios.add(true);
-        SpecialIncomeScenarios.add(false);
+        List<Pair<Integer, Double>> SpecialIncomeScenarios = new ArrayList<Pair<Integer, Double>>();
+        SpecialIncomeScenarios.add(new Pair<Integer, Double>(2018, 300000.0));
+        SpecialIncomeScenarios.add(new Pair<Integer, Double>(2018, 150000.0));
 
         List<String> fullOutput = new ArrayList<String>();
 
@@ -45,7 +45,7 @@ public class Money {
         try {
             for (String ssa : ssaScenarios) {
                 for (String roi : roiScenarios) {
-                    for (Boolean sis : SpecialIncomeScenarios) {
+                    for (Pair<Integer, Double> sis : SpecialIncomeScenarios) {
                         String cmd = String.format("java %s -loadSSA SSAnalyze-%s.csv -roi 0.0%s %s %s",
                                 cp, ssa, roi, getSpecialIncome(sis), getShowAccounts());
                         //        "-noSpecials -showAccounts > roi-1-r62-f70.txt",
@@ -74,6 +74,8 @@ public class Money {
             }
 
             scenarioOutput = new PrintWriter(new FileWriter("run.txt"));
+
+            scenarioOutput.print("     ");
 
             // output column headers
             for(String s : dsNames)
@@ -117,7 +119,7 @@ public class Money {
      *
      * @return          assets for each year
      */
-    private  Map<Integer, Integer> filter(String ssa, String roi, Boolean sis, List<String> jobOutput) {
+    private  Map<Integer, Integer> filter(String ssa, String roi, Pair<Integer, Double> sis, List<String> jobOutput) {
         /*
 No special after-tax income
 SSAnalyze-r62-f70.csv
@@ -158,17 +160,11 @@ may end early with an exception if we go broke
         return "";//-showAccounts";
     }
 
-    private  String getSpecialIncome(Boolean sis) {
-        if (sis)
-            return "";
-        else
-            return "-noSpecials";
+    private  String getSpecialIncome(Pair<Integer, Double> sis) {
+        return String.format(" -specialInc %d %f", sis.getKey(), sis.getValue());
     }
-    private  String getSpecialIncome2(Boolean sis) {
-        if (sis)
-            return "Si";
-        else
-            return "noSi";
+    private  String getSpecialIncome2(Pair<Integer, Double> sis) {
+        return String.format("si-%.1fk", sis.getValue() / 100000.0);
     }
 
 }
