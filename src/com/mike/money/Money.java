@@ -30,9 +30,9 @@ public class Money {
         roiScenarios.add("3");
         roiScenarios.add("4");
 
-        List<Pair<Integer, Double>> SpecialIncomeScenarios = new ArrayList<Pair<Integer, Double>>();
-        SpecialIncomeScenarios.add(new Pair<Integer, Double>(2018, 300000.0));
-        SpecialIncomeScenarios.add(new Pair<Integer, Double>(2018, 150000.0));
+        List<Pair<Integer, Pair<String, Double>>> SpecialIncomeScenarios = new ArrayList<Pair<Integer, Pair<String, Double>>>();
+        SpecialIncomeScenarios.add(new Pair<Integer, Pair<String, Double>>(2018, new Pair("\"Trading Ameri\"", 300000.0)));
+        SpecialIncomeScenarios.add(new Pair<Integer, Pair<String, Double>>(2018, new Pair("\"Trading Ameri\"", 150000.0)));
 
         List<String> fullOutput = new ArrayList<String>();
 
@@ -45,7 +45,7 @@ public class Money {
         try {
             for (String ssa : ssaScenarios) {
                 for (String roi : roiScenarios) {
-                    for (Pair<Integer, Double> sis : SpecialIncomeScenarios) {
+                    for (Pair<Integer, Pair<String, Double>> sis : SpecialIncomeScenarios) {
                         String cmd = String.format("java %s -loadSSA SSAnalyze-%s.csv -roi 0.0%s %s %s",
                                 cp, ssa, roi, getSpecialIncome(sis), getShowAccounts());
                         //        "-noSpecials -showAccounts > roi-1-r62-f70.txt",
@@ -55,7 +55,7 @@ public class Money {
 
                         fullOutput.addAll(jobOutput);
 
-                        Map<Integer, Integer> f = filter(ssa, roi, sis, jobOutput);
+                        Map<Integer, Integer> f = filter(jobOutput);
 
                         String ds = String.format("%s-roi-%s-%s", ssa, roi, getSpecialIncome2(sis));
                         dsNames.add(ds);
@@ -112,29 +112,25 @@ public class Money {
      * remove all the extra stuff and create a map of years to the total
      * asset column.  dump all the rest
      *
-     * @param ssa       social security scenario
-     * @param roi       rate of return
-     * @param sis       special income flag
      * @param jobOutput raw output from simulation process
      *
      * @return          assets for each year
      */
-    private  Map<Integer, Integer> filter(String ssa, String roi, Pair<Integer, Double> sis, List<String> jobOutput) {
+    private  Map<Integer, Integer> filter(List<String> jobOutput) {
         /*
 No special after-tax income
 SSAnalyze-r62-f70.csv
 Noga retires at age 62 in 2019
 Annual investment income rate 0.0400
-Year      Exp   Taxes Tot Out     SSA     MRD    Work  Liquid  Assets
--1          0       0       0       0       0       0       0  590631
-2016    90600   27150  117750       0    7599  101000       0  612146
-2017    90600   27404  118004       0    7615  102000       0  635773
+Year      Exp   Taxes Tot Out     SSA     MRD    Work    Gain  Liquid  Assets  Wells F  College  Trading  eBay st  eBay 40 Securion     TIAA  IRA M A  Roth M   Intel s  Intel 4  IRA N AIRA N UBS
+  -1        0       0       0       0       0       0       0       0  590631       40      144       52       43       73      135       66        6       16        2        4        2        8
+2016    90600   30951  121551       0    7599  101000   17714       0  608345       27      150       54       45       76      135       66        6       16        6        8        7       12
 ...
 may end early with an exception if we go broke
         */
 
         int colWidth = 8;   // except for the year which is 4 (5 really)
-        int assetCol = 7;
+        int assetCol = 8;
 
         Map<Integer, Integer> keep = new HashMap<Integer, Integer>();
 
@@ -157,14 +153,15 @@ may end early with an exception if we go broke
     }
 
     private  String getShowAccounts() {
-        return "";//-showAccounts";
+//        return "";
+        return "-showAccounts";
     }
 
-    private  String getSpecialIncome(Pair<Integer, Double> sis) {
-        return String.format(" -specialInc %d %f", sis.getKey(), sis.getValue());
+    private  String getSpecialIncome(Pair<Integer, Pair<String, Double>> sis) {
+        return String.format(" -specialInc %d %s %f", sis.getKey(), sis.getValue().getKey(), sis.getValue().getValue());
     }
-    private  String getSpecialIncome2(Pair<Integer, Double> sis) {
-        return String.format("si-%.1fk", sis.getValue() / 100000.0);
+    private  String getSpecialIncome2(Pair<Integer, Pair<String, Double>> sis) {
+        return String.format("si-%.1fk", sis.getValue().getValue() / 100000.0);
     }
 
 }
