@@ -16,6 +16,8 @@ import java.util.Map;
  */
 public class Money {
 
+    private List<Pair<Integer, Pair<String, Double>>> specialIncomeConstants;
+
     public void run() {
         String wd = "c:\\Users\\mike\\src\\money";
         String cp = "-cp out\\production\\money com.mike.money.Main";
@@ -30,9 +32,15 @@ public class Money {
         roiScenarios.add("3");
         roiScenarios.add("4");
 
+        // special income of different scenarios to run
         List<Pair<Integer, Pair<String, Double>>> SpecialIncomeScenarios = new ArrayList<Pair<Integer, Pair<String, Double>>>();
         SpecialIncomeScenarios.add(new Pair<Integer, Pair<String, Double>>(2018, new Pair("\"Trading Ameri\"", 300000.0)));
         SpecialIncomeScenarios.add(new Pair<Integer, Pair<String, Double>>(2018, new Pair("\"Trading Ameri\"", 150000.0)));
+
+        // special income that happens in all scenarios
+        specialIncomeConstants = new ArrayList<Pair<Integer, Pair<String, Double>>>();
+        // last 20K of Dad's estate released
+        specialIncomeConstants.add(new Pair<Integer, Pair<String, Double>>(2017, new Pair("\"College Wells\"", (3 * (20000.0 / 7)))));
 
         List<String> fullOutput = new ArrayList<String>();
 
@@ -48,7 +56,6 @@ public class Money {
                     for (Pair<Integer, Pair<String, Double>> sis : SpecialIncomeScenarios) {
                         String cmd = String.format("java %s -loadSSA SSAnalyze-%s.csv -roi 0.0%s %s %s",
                                 cp, ssa, roi, getSpecialIncome(sis), getShowAccounts());
-                        //        "-noSpecials -showAccounts > roi-1-r62-f70.txt",
 
                         Exec e = new Exec(cmd, wd);
                         List<String> jobOutput = e.run();
@@ -153,13 +160,20 @@ may end early with an exception if we go broke
     }
 
     private  String getShowAccounts() {
-//        return "";
-        return "-showAccounts";
+        return "";
+//        return " -showAccounts";
     }
 
     private  String getSpecialIncome(Pair<Integer, Pair<String, Double>> sis) {
-        return String.format(" -specialInc %d %s %f", sis.getKey(), sis.getValue().getKey(), sis.getValue().getValue());
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(" -specialInc %d %s %f", sis.getKey(), sis.getValue().getKey(), sis.getValue().getValue()));
+
+        for (Pair<Integer, Pair<String, Double>> s : specialIncomeConstants)
+            sb.append(String.format(" -specialInc %d %s %f", s.getKey(), s.getValue().getKey(), s.getValue().getValue()));
+
+        return sb.toString();
     }
+
     private  String getSpecialIncome2(Pair<Integer, Pair<String, Double>> sis) {
         return String.format("si-%.1fk", sis.getValue().getValue() / 100000.0);
     }
